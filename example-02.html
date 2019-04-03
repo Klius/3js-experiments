@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset=utf-8>
+		<title>02-Modelo 3d</title>
+		<style>
+			body { margin: 0;color: #FFF; }
+			canvas { width: 100%; height: 100% }
+			#tools {
+				position: absolute;
+				border: solid 1px;
+				width: 100%;
+				padding: 20px;
+			}
+			label{
+				margin-right:10px;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="tools">
+			<label>Color</label><input class="jscolor {onFineChange:'changeColor(this)'}" value="00ff00"/>
+			<label></label><input type="range" onchange="lightX(this)" oninput="lightX(this) min="-100" step="0.1" max="100" value="0"/>
+		</div>
+		<script src="src/lib/jscolor.js"></script>
+		<script src="src/lib/three.js"></script>
+		<script src="src/lib/webgl.js"></script>
+		<script src="src/lib/OrbitControls.js"></script>
+		<script src="src/lib/GLTFLoader.js"></script>
+		<script>
+			var scene,camera,renderer,controls,directionalLight,gridHelper,ambientLight;
+			function init(){
+				scene = new THREE.Scene();
+				scene.background = new THREE.Color( 0xbbbbbb );
+				camera = new THREE.PerspectiveCamera(75,window.innerWidth/ window.innerHeight,0.1,1000);
+				camera.position.set(0,2.5,2.5); // Set position like this
+				camera.lookAt(new THREE.Vector3(0,0,0)); // Set look at coordinate like this
+				renderer = new THREE.WebGLRenderer();
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				document.body.appendChild( renderer.domElement );
+				controls = new THREE.OrbitControls(camera);
+				controls.target.set(0,-0.2,-0.2);
+				controls.update();
+				directionalLight = new THREE.DirectionalLight( 0xffffff, 2 );
+				directionalLight.position=new THREE.Vector3(1,1,0);
+				scene.add( directionalLight );
+				ambientLight = new THREE.AmbientLight( 0x404040 ); // soft white light
+				scene.add( ambientLight );
+				var size = 10;
+				var divisions = 10;
+				gridHelper = new THREE.GridHelper( size, divisions );
+				scene.add( gridHelper );
+				var loader = new THREE.GLTFLoader();
+				loader.load('assets/models/Duck.gltf',
+					function(gltf){
+						gltf.scene.name = "pato";
+						scene.add(gltf.scene);
+					},
+					function ( xhr ) {
+						console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+					},function(error){
+					console.error(error);
+					}
+				);
+			}
+			function animate() {
+				requestAnimationFrame( animate );
+				//animation stuff goes here
+				renderer.render( scene, camera );
+			}
+			function changeColor(picker){
+				model = scene.getObjectByName("pato");
+				model.traverse ( ( o ) => {
+					if ( o.isMesh ) {
+						console.log(o);
+						  // note: for a multi-material mesh, `o.material` may be an array,
+						  // in which case you'd need to set `.map` on each value.
+						o.material.color.setHex("0x"+picker.toString());
+					}
+				 });
+			}
+			init();
+			animate();
+		</script>
+	</body>
+</html>

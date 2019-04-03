@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset=utf-8>
+		<title>01-Cubo con cambio de color</title>
+		<style>
+			body { margin: 0;color:#FFFFFF; }
+			canvas { width: 100%; height: 100% }
+			#tools {
+				position: absolute;
+				border: solid 1px;
+				width: 100%;
+				padding: 20px;
+			}
+			label{
+				margin-right:10px;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="tools">
+			<label>Color</label><input class="jscolor {onFineChange:'changeColor(this)'}" value="00ff00"/>
+			<label>X</label> <input type="range" oninput="changeXRot(this)" onchange="changeXRot(this)" min="-100" step="0.1" max="16">
+			<label>Y</label> <input type="range" oninput="changeYRot(this)" onchange="changeYRot(this)" min="-100" step="0.1" max="16">
+			<input name="autorotate" id="autorotate" oninput="setAutoRotation(this)" type="checkbox"/><label for="autorotate">AutoRotate</label>
+		</div>
+		<script src="src/lib/webgl.js"></script>
+		<script src="src/lib/jscolor.js"></script>
+		<script src="src/lib/three.js"></script>
+		<script>
+			var scene = new THREE.Scene();
+			var camera = new THREE.PerspectiveCamera(75,window.innerWidth/ window.innerHeight,0.1,1000);
+			var renderer = new THREE.WebGLRenderer();
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			document.body.appendChild( renderer.domElement );
+			var geometry = new THREE.BoxGeometry( 1, 1, 1 );
+			var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+			var cube = new THREE.Mesh( geometry, material );
+			scene.add( cube );
+			var autoRotate = false;
+			camera.position.z = 5;
+			
+			function animate() {
+				requestAnimationFrame( animate );
+				//animation stuff goes here
+				if (autoRotate){
+					cube.rotation.x += 0.01;
+					cube.rotation.y += 0.01;
+				}
+				renderer.render( scene, camera );
+			}
+			function changeColor(picker){
+				cube.material.color.setHex("0x"+picker.toString());
+			}
+			function changeXRot(range){
+				cube.rotation.x = range.value
+			}
+			function changeYRot(range){
+				cube.rotation.y = range.value
+			}
+			function setAutoRotation(check){
+				if(autoRotate){
+					autoRotate = false;
+				}
+				else{
+					autoRotate = true;
+					cube.rotation.x = 0;
+					cube.rotation.y = 0;
+				}
+			}
+			if ( WEBGL.isWebGLAvailable() ) {
+				// Initiate function or other initializations here
+				animate();
+			} else {
+				var warning = WEBGL.getWebGLErrorMessage();
+				document.getElementById( 'container' ).appendChild( warning );
+			}
+		</script>
+	</body>
+</html>
