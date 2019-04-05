@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset=utf-8>
+		<title>02-Modelo 3d</title>
+		<style>
+			body { margin: 0;color: #FFF; }
+			canvas { width: 100%;height:100%; display:block;}
+			
+			label{
+				margin-right:10px;
+			}
+		</style>
+	</head>
+	<body>
+		
+		<div id="tools">
+			<label>Color</label><input class="jscolor {onFineChange:'changeColor(this)'}" value="00ff00"/>
+			<label>Model</label>
+			<select id="modelSelect" onchange="loadModel(this.value)">
+				<option value="table" selected>Table</option>
+				<option value="car">Car</option>
+			</select>
+		</div>
+		<div id="viewport"></div>
+		<script src="src/lib/jscolor.js"></script>
+		<script src="src/lib/three.js"></script>
+		<script src="src/lib/webgl.js"></script>
+		<script src="src/lib/OrbitControls.js"></script>
+		<script src="src/lib/GLTFLoader.js"></script>
+		<script>
+			var objects ={
+				'table':{
+					'name':'table',
+					'src':'assets/models/03/table/scene.gltf',
+					'materials':{
+						0:{
+							'src':'assets/models/03/table/textures/Wood_baseColor.jpeg'
+						},
+						1:{
+							'src':'assets/models/03/table/textures/Wood_zebraColor.jpeg'
+						}
+					}
+				},
+				'car':{
+					'name':'car',
+					'src':'assets/models/03/car/scene.gltf',
+					'materials':{
+						0:{
+							'src':'assets/models/03/car/textures/Wood_baseColor.jpeg'
+						},
+						1:{
+							'src':'assets/models/03/car/textures/Wood_zebraColor.jpeg'
+						}
+					}
+				}
+			};
+			var loadedObjects = {};
+			var scene,camera,renderer,controls,directionalLight,gridHelper,spotLight,loader,oldObject;
+			function init(){
+				scene = new THREE.Scene();
+				scene.background = new THREE.Color( 0xbbbbbb );
+				camera = new THREE.PerspectiveCamera(75,window.innerWidth/ window.innerHeight,0.1,30000);
+				camera.position.set(10,10,-3); // Set position like this
+				camera.lookAt(new THREE.Vector3(0,0,0)); // Set look at coordinate like this
+				renderer = new THREE.WebGLRenderer();
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.shadowMap.enabled = true;
+				renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+				document.getElementById("viewport").appendChild( renderer.domElement );
+				controls = new THREE.OrbitControls(camera,renderer.domElement);
+				controls.update();
+				
+				spotLight = new THREE.SpotLight( 0xffffff );
+				spotLight.position.set( 100, 1000, -300 );
+				spotLight.intensity = 2;
+				spotLight.penumbra = 0;
+				spotLight.castShadow = true;
+
+				spotLight.shadow.mapSize.width = 1024;
+				spotLight.shadow.mapSize.height = 1024;
+
+				spotLight.shadow.camera.near = 500;
+				spotLight.shadow.camera.far = 4000;
+				spotLight.shadow.camera.fov = 30;
+				
+				scene.add( spotLight );
+				lightHelper = new THREE.SpotLightHelper( spotLight );
+				scene.add( lightHelper );
+				//ambientLight = new THREE.AmbientLight( 0x404040 ); // soft white light
+				//scene.add( ambientLight );
+				var size = 10;
+				var divisions = 10;
+				gridHelper = new THREE.GridHelper( size, divisions );
+				scene.add( gridHelper );
+				loader = new THREE.GLTFLoader();
+				oldObject = "table";
+				loader.load('assets/models/03/table/scene.gltf',
+					function(gltf){
+						gltf.scene.name = "table";
+						scene.add(gltf.scene);
+					},
+					function ( xhr ) {
+						console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+					},function(error){
+					console.error(error);
+					}
+				);
+				loadModels();
+				window.addEventListener( 'resize', onWindowResize, false );
+			}
+			function addOptions(){
+				
+			}
+			
+			function onWindowResize() {
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+			}
+			function animate() {
+				requestAnimationFrame( animate );
+				//animation stuff goes here
+				renderer.render( scene, camera );
+			}
+			function changeColor(picker){
+				model = scene.getObjectByName(oldObject);
+				model.traverse ( ( o ) => {
+					if ( o.isMesh ) {
+						console.log(o);
+						  // note: for a multi-material mesh, `o.material` may be an array,
+						  // in which case you'd need to set `.map` on each value.
+						o.material.color.setHex("0x"+picker.toString());
+					}
+				 });
+			}
+			function loadModel(id){
+				var remObject = scene.getObjectByName( oldObject );
+				scene.remove(remObject);
+				scene.add(loadedObjects[id]);
+				oldObject = id;
+				
+			}
+			function loadModels(){
+				for (obj in objects) {
+					console.log(obj);
+					loader.load(
+						objects[obj].src,
+						function(gltf){
+							//gltf.scene.name = objects[obj].name;
+							loadedObjects[gltf.scene.name] = gltf.scene;
+						},
+						function ( xhr ) {
+							console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+						},function(error){
+						console.error(error);
+						}
+					);
+				}
+			}
+			init();
+			animate();
+		</script>
+	</body>
+</html>
