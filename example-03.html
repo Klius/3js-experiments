@@ -26,6 +26,7 @@
 			<label>Second Material</label>
 			<select id="secondMaterialSelect" onchange="changeSecondMaterial(this.value)">
 			</select>
+			<label>Second Color</label><input class="jscolor {onFineChange:'changeColor(this,true)'}" value="00ff00"/>
 		</div>
 		<div id="viewport"></div>
 		<script src="src/lib/jscolor.js"></script>
@@ -71,12 +72,26 @@
 					'groundPos' :  new THREE.Vector3( 0, -4, 0 ),
 					'objectScale': new THREE.Vector3( 0.01, 0.01, 0.01 ),
 					'colorMaterial':'paint',
+					'secondMaterial':'black_paint',
 					'materials':{
+						'none':{
+							'src':'assets/models/03/car/textures/none.png'
+						},
 						'void':{
 							'src':'assets/models/03/car/textures/tile-void.png'
 						},
 						zebra:{
 							'src':'assets/models/03/table/textures/Wood_zebraColor.jpeg'
+						},
+					},
+					'secondaryMaterials':{
+						'none':{
+							'src':'assets/models/03/car/textures/none.png',
+							roughnessMap:'assets/models/03/car/textures/black_matte_metallicRoughness.png'
+						},
+						metallic:{
+							'src':'assets/models/03/marbleTable/textures/metallic.png',
+							'roughnessMap':'assets/models/03/marbleTable/textures/metallic_metallicRoughness.png'
 						}
 					}
 				},
@@ -142,6 +157,7 @@
 				renderer.gammaOutput = true;
 				document.getElementById("viewport").appendChild( renderer.domElement );
 				controls = new THREE.OrbitControls(camera,renderer.domElement);
+				controls.autoRotate = true;
 				controls.update();
 				/*LIGHTS*/
 				ambientLight = new THREE.AmbientLight( 0xffffff, 0.1 );
@@ -199,18 +215,29 @@
 			function animate() {
 				requestAnimationFrame( animate );
 				//animation stuff goes here
+				controls.update();
 				renderer.render( scene, camera );
 			}
-			function changeColor(picker){
+			function changeColor(picker,secondary){
 				model = scene.getObjectByName(oldObject);
 				
 				model.traverse ( ( o ) => {
 					if ( o.isMesh ) {
-						if (o.material.name == objects[oldObject].colorMaterial){
-						console.log(o);
-						  // note: for a multi-material mesh, `o.material` may be an array,
-						  // in which case you'd need to set `.map` on each value.
-						o.material.color.setHex("0x"+picker.toString());
+						if (secondary){
+							if (o.material.name == objects[oldObject].secondMaterial){
+							console.log(o);
+							  // note: for a multi-material mesh, `o.material` may be an array,
+							  // in which case you'd need to set `.map` on each value.
+							o.material.color.setHex("0x"+picker.toString());
+							}
+						}
+						else{
+							if (o.material.name == objects[oldObject].colorMaterial){
+							console.log(o);
+							  // note: for a multi-material mesh, `o.material` may be an array,
+							  // in which case you'd need to set `.map` on each value.
+							o.material.color.setHex("0x"+picker.toString());
+							}
 						}
 					}
 				 });
