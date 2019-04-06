@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<meta charset=utf-8>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<title>02-Modelo 3d</title>
 		<style>
-			body { margin: 0;color: #FFF; }
+			body { margin: 0; }
 			canvas { width: 100%;height:100%; display:block;}
 			
 			label{
@@ -21,6 +22,9 @@
 				<option value="table" selected>Table</option>
 				<option value="car">Car</option>
 			</select>
+			<label>Material</label>
+			<select id="materialSelect" onchange="changeMaterial">
+			</select>
 		</div>
 		<div id="viewport"></div>
 		<script src="src/lib/jscolor.js"></script>
@@ -33,6 +37,10 @@
 				'table':{
 					'name':'table',
 					'src':'assets/models/03/table/scene.gltf',
+					'addGround':true,
+					'groundPos':  new THREE.Vector3( 0, -1, 5 ),
+					'castShadow': true,
+					'colorMaterial':'Wood',
 					'materials':{
 						0:{
 							'src':'assets/models/03/table/textures/Wood_baseColor.jpeg'
@@ -45,36 +53,52 @@
 				'car':{
 					'name':'car',
 					'src':'assets/models/03/car/scene.gltf',
+					'addGround':true,
+					'castShadow': true,
+					'groundPos' :  new THREE.Vector3( 0, -4, 0 ),
+					'objectScale': new THREE.Vector3( 0.01, 0.01, 0.01 ),
+					'colorMaterial':'paint',
 					'materials':{
 						0:{
-							'src':'assets/models/03/car/textures/Wood_baseColor.jpeg'
+							'src':'assets/models/03/table/textures/Wood_baseColor.jpeg'
 						},
 						1:{
-							'src':'assets/models/03/car/textures/Wood_zebraColor.jpeg'
+							'src':'assets/models/03/table/textures/Wood_zebraColor.jpeg'
 						}
 					}
 				}
 			};
 			var loadedObjects = {};
-			var scene,camera,renderer,controls,directionalLight,gridHelper,spotLight,loader,oldObject;
+			var scene,camera,renderer,controls,ambientLight,gridHelper,spotLight,loader,oldObject;
 			function init(){
 				scene = new THREE.Scene();
 				scene.background = new THREE.Color( 0xbbbbbb );
-				camera = new THREE.PerspectiveCamera(75,window.innerWidth/ window.innerHeight,0.1,30000);
+				camera = new THREE.PerspectiveCamera(75,window.innerWidth/ window.innerHeight,0.1,1000);
 				camera.position.set(10,10,-3); // Set position like this
 				camera.lookAt(new THREE.Vector3(0,0,0)); // Set look at coordinate like this
 				renderer = new THREE.WebGLRenderer();
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				renderer.shadowMap.enabled = true;
 				renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+				renderer.gammaInput = true;
+				renderer.gammaOutput = true;
 				document.getElementById("viewport").appendChild( renderer.domElement );
 				controls = new THREE.OrbitControls(camera,renderer.domElement);
 				controls.update();
+				/*LIGHTS*/
+				ambientLight = new THREE.AmbientLight( 0xffffff, 0.1 );
+				scene.add( ambientLight );
 				
-				spotLight = new THREE.SpotLight( 0xffffff );
-				spotLight.position.set( 100, 1000, -300 );
+				var directionalLight = new THREE.DirectionalLight( 0xdddddd, 4 );
+				directionalLight.position.set( 0, 0, 1 ).normalize();
+				scene.add( directionalLight );
+				
+				spotLight = new THREE.SpotLight( 0xffffff ,1);
+				spotLight.position.set( 5, 10, 5 );
 				spotLight.intensity = 2;
-				spotLight.penumbra = 0;
+				spotLight.angle = 0.50;
+				spotLight.decay = 2;
+				spotLight.penumbra = 0.75;
 				spotLight.castShadow = true;
 
 				spotLight.shadow.mapSize.width = 1024;
@@ -95,17 +119,6 @@
 				scene.add( gridHelper );
 				loader = new THREE.GLTFLoader();
 				oldObject = "table";
-				loader.load('assets/models/03/table/scene.gltf',
-					function(gltf){
-						gltf.scene.name = "table";
-						scene.add(gltf.scene);
-					},
-					function ( xhr ) {
-						console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
-					},function(error){
-					console.error(error);
-					}
-				);
 				loadModels();
 				window.addEventListener( 'resize', onWindowResize, false );
 			}
@@ -126,21 +139,52 @@
 			}
 			function changeColor(picker){
 				model = scene.getObjectByName(oldObject);
+				
 				model.traverse ( ( o ) => {
 					if ( o.isMesh ) {
+						if (o.material.name == objects[oldObject].colorMaterial){
 						console.log(o);
 						  // note: for a multi-material mesh, `o.material` may be an array,
 						  // in which case you'd need to set `.map` on each value.
 						o.material.color.setHex("0x"+picker.toString());
+						}
 					}
 				 });
 			}
+			function changeMaterial(id){
+				info = objects[oldObject];
+				mesh.material.map = THREE.ImageUtils.loadTexture( info.materials[id] );
+				mesh.material.needsUpdate = true;
+			}
 			function loadModel(id){
 				var remObject = scene.getObjectByName( oldObject );
+				var ground = scene.getObjectByName("ground");
+				scene.remove(ground);
 				scene.remove(remObject);
-				scene.add(loadedObjects[id]);
+				sceneInfo = objects[id];
+				obj = loadedObjects[id];
 				oldObject = id;
-				
+				obj.traverse( function ( node ) {
+					if ( node.isMesh || node.isLight ){ node.castShadow = true;}
+				});
+				if ( sceneInfo.addGround ) {
+					var groundMaterial = new THREE.MeshPhongMaterial( { color: 0xFFFFFF } );
+					var ground = new THREE.Mesh( new THREE.PlaneBufferGeometry( 512, 512 ), groundMaterial );
+					ground.name="ground";
+					ground.receiveShadow = true;
+					if ( sceneInfo.groundPos ) {
+						ground.position.copy( sceneInfo.groundPos );
+					} else {
+						ground.position.z = - 70;
+					}
+					ground.rotation.x = - Math.PI / 2;
+					scene.add( ground );
+				}
+				if ( sceneInfo.objectScale ) {
+						obj.scale.copy( sceneInfo.objectScale );
+				}
+				scene.add(obj);
+				loadMaterials(id);
 			}
 			function loadModels(){
 				for (obj in objects) {
@@ -150,6 +194,7 @@
 						function(gltf){
 							//gltf.scene.name = objects[obj].name;
 							loadedObjects[gltf.scene.name] = gltf.scene;
+							if (gltf.scene.name == "table"){loadModel("table");}
 						},
 						function ( xhr ) {
 							console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
