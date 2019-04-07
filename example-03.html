@@ -3,30 +3,67 @@
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-		<title>02-Modelo 3d</title>
+		<title>03-Test Configurador</title>
 		<style>
 			body { margin: 0; overflow:hidden;}
-			canvas { width: 100%;height:100%; display:block;}
-			
+			canvas { width: 100%;height:100%; }
+			#material-top{
+				position:absolute;
+				right: 40%;
+			}
+			#material-bottom{
+				position:absolute;
+				bottom:0;
+				bottom: 15px;
+				right: 40%;
+			}
 			label{
 				margin-right:10px;
+			}
+			.load-screen{
+				position:absolute;
+				width:100%;
+				height:100%;
+				background-color:#bbb;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				flex-direction: column;
+				z-index:100;
+			}
+			@keyframes fade-out {
+			  0%   {opacity:1;}
+			  75%  {opacity:0;}
+			  100% {display:none important!; opacity:0; z-index:-1;}
+			}
+			.fadeOut{
+				animation-name: fade-out;
+				animation-duration: 2s;
+				animation-fill-mode: forwards;
 			}
 		</style>
 	</head>
 	<body>
-		
-		<div id="tools">
-			<label>Color</label><input class="jscolor {onFineChange:'changeColor(this)'}" value="00ff00"/>
-			<label>Model</label>
+		<div id="loading" class="load-screen">
+			<div>
+				<span>Cargando</span></br>
+				<img src="assets/ajax-loader.gif"/>
+			</div>
+		</div>
+		<div id="material-top">
+			<label>Modelo</label>
 			<select id="modelSelect" onchange="loadModel(this.value)">
 			</select>
+			<label for="color-1">Color</label><input id="color-1" name="color1" class="jscolor {onFineChange:'changeColor(this)'}" value="ffffff"/>
 			<label>Material</label>
 			<select id="materialSelect" onchange="changeMaterial(this.value)">
 			</select>
+		</div>
+		<div id="material-bottom">
 			<label>Second Material</label>
 			<select id="secondMaterialSelect" onchange="changeSecondMaterial(this.value)">
 			</select>
-			<label>Second Color</label><input class="jscolor {onFineChange:'changeColor(this,true)'}" value="00ff00"/>
+			<label for="color-2">Color</label><input name="color-2" id="color-2" class="jscolor {onFineChange:'changeColor(this,true)'}" value="ffffff"/>
 		</div>
 		<div id="viewport"></div>
 		<script src="src/lib/jscolor.js"></script>
@@ -35,6 +72,8 @@
 		<script src="src/lib/OrbitControls.js"></script>
 		<script src="src/lib/GLTFLoader.js"></script>
 		<script>
+			var loadCount = 0;
+			var objCount = 3;
 			var modelSelect = document.getElementById("modelSelect");
 			var materialSelect = document.getElementById("materialSelect");
 			var secondMaterialSelect = document.getElementById("secondMaterialSelect");
@@ -344,6 +383,10 @@
 							//gltf.scene.name = objects[obj].name;
 							loadedObjects[gltf.scene.name] = gltf.scene;
 							if (gltf.scene.name == "table"){loadModel("table");}
+							loadCount += 1;
+							if (loadCount == objCount){
+								document.getElementById("loading").className +=" fadeOut";
+							}
 						},
 						function ( xhr ) {
 							console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
