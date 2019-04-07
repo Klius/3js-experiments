@@ -194,9 +194,14 @@
 				renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 				renderer.gammaInput = true;
 				renderer.gammaOutput = true;
+				//CONTROLS
 				document.getElementById("viewport").appendChild( renderer.domElement );
 				controls = new THREE.OrbitControls(camera,renderer.domElement);
 				controls.autoRotate = true;
+				controls.enablePan = false;
+				controls.maxDistance = 25;
+				controls.minDistance = 15;
+				controls.maxPolarAngle = 1.5;
 				controls.update();
 				/*LIGHTS*/
 				ambientLight = new THREE.AmbientLight( 0xffffff, 0.1 );
