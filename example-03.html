@@ -207,13 +207,14 @@
 				ambientLight = new THREE.AmbientLight( 0xffffff, 0.1 );
 				scene.add( ambientLight );
 				
-				var directionalLight = new THREE.DirectionalLight( 0xdddddd, 4 );
+				/*var directionalLight = new THREE.DirectionalLight( 0xdddddd, 4 );
 				directionalLight.position.set( 0, 0, 1 ).normalize();
+				directionalLight.castShadow = true;
 				scene.add( directionalLight );
-				
+				*/
 				spotLight = new THREE.SpotLight( 0xffffff ,1);
-				spotLight.position.set( 0, 20, 0 );
-				spotLight.intensity = 2;
+				spotLight.position.set( 0, 50, 0 );
+				spotLight.intensity = 1;
 				spotLight.angle = 0.50;
 				spotLight.decay = 2;
 				spotLight.penumbra = 0.75;
@@ -222,10 +223,7 @@
 				spotLight.shadow.mapSize.width = 1024;
 				spotLight.shadow.mapSize.height = 1024;
 
-				spotLight.shadow.camera.near = 500;
-				spotLight.shadow.camera.far = 4000;
-				spotLight.shadow.camera.fov = 30;
-				
+				spotLight.shadow = new THREE.LightShadow(new THREE.PerspectiveCamera(60, 1, 1, 2500));//without this there are no shadows\\*0*//
 				scene.add( spotLight );
 				lightHelper = new THREE.SpotLightHelper( spotLight );
 				scene.add( lightHelper );
@@ -332,14 +330,15 @@
 				sceneInfo = objects[id];
 				obj = loadedObjects[id];
 				oldObject = id;
-				obj.traverse( function ( node ) {
+				/*obj.traverse( function ( node ) {
 					if ( node.isMesh || node.isLight ){ node.castShadow = true;}
-				});
+				});*/
 				if ( sceneInfo.addGround ) {
 					var groundMaterial = new THREE.MeshPhongMaterial( { color: 0x999999 } );
 					var ground = new THREE.Mesh( new THREE.PlaneBufferGeometry( 512, 512 ), groundMaterial );
 					ground.name="ground";
 					ground.receiveShadow = true;
+					ground.castShadow = false;
 					if ( sceneInfo.groundPos ) {
 						ground.position.copy( sceneInfo.groundPos );
 					} else {
@@ -386,6 +385,13 @@
 						objects[obj].src,
 						function(gltf){
 							//gltf.scene.name = objects[obj].name;
+							gltf.scene.traverse( ( o ) => {
+								if( o.isMesh){
+									console.log("adding shadows");
+									o.castShadow = true;
+									o.receiveShadow = false;
+								}
+							});
 							loadedObjects[gltf.scene.name] = gltf.scene;
 							if (gltf.scene.name == "table"){loadModel("table");}
 							loadCount += 1;
