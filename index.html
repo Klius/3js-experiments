@@ -10,6 +10,7 @@
 			#material-top{
 				position:absolute;
 				right: 40%;
+				
 			}
 			#material-bottom{
 				position:absolute;
@@ -19,6 +20,7 @@
 			}
 			label{
 				margin-right:10px;
+				color:white;
 			}
 			.load-screen{
 				position:absolute;
@@ -54,7 +56,7 @@
 			<label>Modelo</label>
 			<select id="modelSelect" onchange="loadModel(this.value)">
 			</select>
-			<label for="color-1">Color</label><input id="color-1" name="color1" class="jscolor {onFineChange:'changeColor(this)'}" value="ffffff"/>
+			<label for="color-1">Color</label><input readonly id="color-1" name="color1" class="jscolor {onFineChange:'changeColor(this)'}" value="ffffff"/>
 			<label>Material</label>
 			<select id="materialSelect" onchange="changeMaterial(this.value)">
 			</select>
@@ -63,128 +65,28 @@
 			<label>Second Material</label>
 			<select id="secondMaterialSelect" onchange="changeSecondMaterial(this.value)">
 			</select>
-			<label for="color-2">Color</label><input name="color-2" id="color-2" class="jscolor {onFineChange:'changeColor(this,true)'}" value="ffffff"/>
+			<label for="color-2">Color</label><input readonly name="color-2" id="color-2" class="jscolor {onFineChange:'changeColor(this,true)'}" value="ffffff"/>
 		</div>
 		<div id="viewport"></div>
 		<script src="src/lib/jscolor.js"></script>
 		<script src="src/lib/three.js"></script>
 		<script src="src/lib/webgl.js"></script>
 		<script src="src/lib/OrbitControls.js"></script>
+		<script src="src/lib/Reflector.js"></script>
 		<script src="src/lib/GLTFLoader.js"></script>
+		<script src="src/lib/objects.js"></script>
 		<script>
 			var loadCount = 0;
 			var objCount = 3;
 			var modelSelect = document.getElementById("modelSelect");
 			var materialSelect = document.getElementById("materialSelect");
 			var secondMaterialSelect = document.getElementById("secondMaterialSelect");
-			var objects ={
-				'table':{
-					'name':'table',
-					'src':'assets/models/03/table/scene.gltf',
-					'addGround':true,
-					'groundPos':  new THREE.Vector3( 0, -1, 5 ),
-					'castShadow': true,
-					'colorMaterial':'Wood',
-					'materials':{
-						wood:{
-							'src':'assets/models/03/table/textures/Wood_baseColor.jpeg'
-						},
-						zebra:{
-							'src':'assets/models/03/table/textures/Wood_zebraColor.jpeg'
-						},
-						'void':{
-							'src':'assets/models/03/table/textures/tile-void.png'
-						},
-						weird:{
-							'src':'assets/models/03/table/textures/weird-wood.png'
-						},
-						granite:{
-							'src':'assets/models/03/table/textures/granite.png'
-						}
-					}
-				},
-				'car':{
-					'name':'car',
-					'src':'assets/models/03/car/scene.gltf',
-					'addGround':true,
-					'castShadow': true,
-					'groundPos' :  new THREE.Vector3( 0, -4, 0 ),
-					'objectScale': new THREE.Vector3( 0.01, 0.01, 0.01 ),
-					'colorMaterial':'paint',
-					'secondMaterial':'black_paint',
-					'materials':{
-						'none':{
-							'src':'assets/models/03/car/textures/none.png'
-						},
-						'void':{
-							'src':'assets/models/03/car/textures/tile-void.png'
-						},
-						zebra:{
-							'src':'assets/models/03/table/textures/Wood_zebraColor.jpeg'
-						},
-					},
-					'secondaryMaterials':{
-						'none':{
-							'src':'assets/models/03/car/textures/none.png',
-							'roughnessMap':'assets/models/03/car/textures/black_matte_metallicRoughness.png'
-						},
-						metallic:{
-							'src':'assets/models/03/marbleTable/textures/metallic.png',
-							'roughnessMap':'assets/models/03/marbleTable/textures/metallic_metallicRoughness.png'
-						}
-					}
-				},
-				marbleTable:{
-					'name':'marbleTable',
-					'src':'assets/models/03/marbleTable/scene.gltf',
-					'addGround':true,
-					'castShadow': true,
-					'groundPos' :  new THREE.Vector3( 0, -4, 0 ),
-					'objectScale': new THREE.Vector3( 0.04, 0.04, 0.04 ),
-					'colorMaterial':'marble',
-					'secondMaterial':'wood',
-					'materials':{
-						'marble':{
-							'src':'assets/models/03/marbleTable/textures/marble_baseColor.jpeg',
-							'roughnessMap':'assets/models/03/marbleTable/textures/marble_metallicRoughness.png',
-							'normalMap':'assets/models/03/marbleTable/textures/marble_normal.png'
-						},
-						metallic:{
-							'src':'assets/models/03/marbleTable/textures/metallic.png',
-							'roughnessMap':'assets/models/03/marbleTable/textures/metallic_metallicRoughness.png',
-							'normalMap':'assets/models/03/marbleTable/textures/metallic_normal.png'
-						},
-						granite:{
-							'src':'assets/models/03/marbleTable/textures/granite.png',
-							'roughnessMap':'assets/models/03/marbleTable/textures/granite_roughnessMap.png',
-							'normalMap':'assets/models/03/marbleTable/textures/granite_normal.png'
-						}
-					},
-					'secondaryMaterials':{
-						'wood':{
-							'src':'assets/models/03/marbleTable/textures/wood_baseColor.jpeg',
-							'roughnessMap':'assets/models/03/marbleTable/textures/wood_metallicRoughness.png',
-							'normalMap':'assets/models/03/marbleTable/textures/wood_normal.png'
-						},
-						'stones':{
-							'src':'assets/models/03/marbleTable/textures/stones.png',
-							'roughnessMap':'assets/models/03/marbleTable/textures/stones_roughnessMap.png',
-							'normalMap':'assets/models/03/marbleTable/textures/stones_normal.png'
-						},
-						metallic:{
-							'src':'assets/models/03/marbleTable/textures/metallic.png',
-							'roughnessMap':'assets/models/03/marbleTable/textures/metallic_metallicRoughness.png',
-							'normalMap':'assets/models/03/marbleTable/textures/metallic_normal.png'
-						}
-					}
-				}
-			};
 			var loadedObjects = {};
-			var scene,camera,renderer,controls,ambientLight,gridHelper,spotLight,loader,oldObject;
+			var scene,camera,renderer,controls,ambientLight,gridHelper,spotLight,light,directionalLight,loader,oldObject,mirror;
 			function init(){
 				scene = new THREE.Scene();
-				scene.background = new THREE.Color( 0xbbbbbb );
-				scene.fog = new THREE.FogExp2( 0xbbbbbb, 0.009);//0.0050 );
+				scene.background = new THREE.Color( 0x000000 );
+				scene.fog = new THREE.FogExp2( 0x000000, 0.0055)//0.0050 );
 				camera = new THREE.PerspectiveCamera(75,window.innerWidth/ window.innerHeight,0.1,1000);
 				camera.position.set(10,10,-3); // Set position like this
 				camera.lookAt(new THREE.Vector3(0,0,0)); // Set look at coordinate like this
@@ -204,14 +106,14 @@
 				controls.maxPolarAngle = 1.5;
 				controls.update();
 				/*LIGHTS*/
-				ambientLight = new THREE.AmbientLight( 0xffffff, 0.1 );
+				ambientLight = new THREE.AmbientLight( 0x404040, 0.5 );
 				scene.add( ambientLight );
 				
-				/*var directionalLight = new THREE.DirectionalLight( 0xdddddd, 4 );
-				directionalLight.position.set( 0, 0, 1 ).normalize();
-				directionalLight.castShadow = true;
-				scene.add( directionalLight );
-				*/
+				light = new THREE.PointLight( 0xffffff, 1, 100 );
+				light.position.set( 10, 50, 0 );
+				scene.add( light );
+				scene.castShadow = true;
+				/*
 				spotLight = new THREE.SpotLight( 0xffffff ,1);
 				spotLight.position.set( 0, 50, 0 );
 				spotLight.intensity = 1;
@@ -219,14 +121,35 @@
 				spotLight.decay = 2;
 				spotLight.penumbra = 0.75;
 				spotLight.castShadow = true;
+				*/
+				light.shadow.mapSize.width = 512;
+				light.shadow.mapSize.height = 512;
 
-				spotLight.shadow.mapSize.width = 1024;
-				spotLight.shadow.mapSize.height = 1024;
-
-				spotLight.shadow = new THREE.LightShadow(new THREE.PerspectiveCamera(60, 1, 1, 2500));//without this there are no shadows\\*0*//
-				scene.add( spotLight );
-				lightHelper = new THREE.SpotLightHelper( spotLight );
+				light.shadow = new THREE.LightShadow(new THREE.PerspectiveCamera(60, 1, 1, 2500));//without this there are no shadows\\*0 /
+				scene.add( light );
+				lightHelper = new THREE.PointLightHelper( light );
 				scene.add( lightHelper );
+				/*
+				Directional Light
+				*/
+				directionalLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
+				directionalLight.position = camera.position;
+				directionalLight.castShadow = true;
+				scene.add(directionalLight);
+				/*
+					MIRROR
+				*/
+				var geometry = new THREE.CircleBufferGeometry( 40, 64 );
+				mirror = new THREE.Reflector( geometry, {
+					clipBias: 0.003,
+					textureWidth:  window.innerWidth * window.devicePixelRatio,
+					textureHeight: window.innerHeight * window.devicePixelRatio,
+					color: 0x777777,
+					recursion: 1
+				} );
+				mirror.position.y = -1.5;
+				mirror.rotateX( - Math.PI / 2 );
+				scene.add( mirror );
 				//ambientLight = new THREE.AmbientLight( 0x404040 ); // soft white light
 				//scene.add( ambientLight );
 				var size = 10;
@@ -258,6 +181,7 @@
 				requestAnimationFrame( animate );
 				//animation stuff goes here
 				controls.update();
+				directionalLight.position.copy( camera.position );
 				renderer.render( scene, camera );
 			}
 			function changeColor(picker,secondary){
@@ -267,7 +191,6 @@
 					if ( o.isMesh ) {
 						if (secondary){
 							if (o.material.name == objects[oldObject].secondMaterial){
-							console.log(o);
 							  // note: for a multi-material mesh, `o.material` may be an array,
 							  // in which case you'd need to set `.map` on each value.
 							o.material.color.setHex("0x"+picker.toString());
@@ -275,7 +198,6 @@
 						}
 						else{
 							if (o.material.name == objects[oldObject].colorMaterial){
-							console.log(o);
 							  // note: for a multi-material mesh, `o.material` may be an array,
 							  // in which case you'd need to set `.map` on each value.
 							o.material.color.setHex("0x"+picker.toString());
@@ -290,7 +212,6 @@
 				obj.traverse( ( o ) => {
 					if ( o.isMesh ) {
 						if (o.material.name == info.colorMaterial){
-							console.log(info.materials[id].src);
 							o.material.map = THREE.ImageUtils.loadTexture( info.materials[id].src );
 							if (info.materials[id].roughnessMap){
 								o.material.roughnessMap = THREE.ImageUtils.loadTexture( info.materials[id].roughnessMap );
@@ -298,7 +219,6 @@
 							if( info.materials[id].normalMap){
 								o.material.normalMap = THREE.ImageUtils.loadTexture( info.materials[id].normalMap );
 							}
-							console.log(o.material);
 							o.material.needsUpdate = true;
 						}
 					}
@@ -334,15 +254,18 @@
 					if ( node.isMesh || node.isLight ){ node.castShadow = true;}
 				});*/
 				if ( sceneInfo.addGround ) {
-					var groundMaterial = new THREE.MeshPhongMaterial( { color: 0x999999 } );
+					var groundMaterial = new THREE.MeshPhongMaterial( { color: 0x000000, transparent:true, opacity: 0.9 } );
 					var ground = new THREE.Mesh( new THREE.PlaneBufferGeometry( 512, 512 ), groundMaterial );
 					ground.name="ground";
 					ground.receiveShadow = true;
 					ground.castShadow = false;
 					if ( sceneInfo.groundPos ) {
 						ground.position.copy( sceneInfo.groundPos );
+						mirror.position.copy(sceneInfo.groundPos);
+						mirror.position.y -= 0.1;
 					} else {
 						ground.position.z = - 70;
+						mirror.position.z = -70.1;
 					}
 					ground.rotation.x = - Math.PI / 2;
 					scene.add( ground );
@@ -380,7 +303,6 @@
 			}
 			function loadModels(){
 				for (obj in objects) {
-					console.log(obj);
 					loader.load(
 						objects[obj].src,
 						function(gltf){
@@ -390,6 +312,7 @@
 									console.log("adding shadows");
 									o.castShadow = true;
 									o.receiveShadow = false;
+									o.material.fog = false;
 								}
 							});
 							loadedObjects[gltf.scene.name] = gltf.scene;
